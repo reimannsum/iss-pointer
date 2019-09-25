@@ -1,6 +1,6 @@
 # Raspberry Pi ISS Pointer
 
-## 1.0.2
+## 1.0.2 (September 25, 2019)
 1. Adding models for a 3d printed pointer shaped like a telescope. 
 - The base is to be turned by a motor [like this](https://www.ebay.com/sch/i.html?&_nkw=39MM+Thin+2-phase+4-wire+Stepper+Motor&_sacat=0)
 - The arm will be turned by a motor [like this](https://www.ebay.com/sch/i.html?&_nkw=Micro+15MM+DC+5V+2-Phase+4-Wire+Metal+Gear+Stepper+Motor&_sacat=0&LH_TitleDesc=0&_osacat=0&_odkw=39MM+Thin+2-phase+4-wire+Stepper+Motor)
