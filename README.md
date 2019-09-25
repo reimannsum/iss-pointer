@@ -45,6 +45,9 @@ $ cd iss-pointer/bin
 $ sudo python3 isspointer.py
 ```
 
+## Included model
+![Telescope model](Telescope.jpeg)
+
 ## GPIO Header
 
 ![pi3_gpio](https://user-images.githubusercontent.com/21986859/34141154-78ec6628-e44d-11e7-8ef6-7ffcb87f79a1.png)
