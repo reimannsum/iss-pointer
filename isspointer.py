@@ -24,13 +24,12 @@ It creates objects of the motor contoller and the servo controller.servo
 #from vector import Correction
 import RPi.GPIO as GPIO
 from avalon_framework import Avalon
-import compass
-from motor import Stepper
-from servo import Servo
+from bin.compass import Compass
+from bin.motor import Stepper
+from bin.servo import Servo
 from skyfield.api import Topos, load
 import json, time
 import urllib.request
-from geomag.geomag import GeoMag as geomag
 
 VERSION = "1.0.1"
 lat = 42.5337
@@ -62,15 +61,11 @@ class debug:
 class Pointing_Vector:
 
 	def __init__(self):
-		self.compass = compass.Compass()
-		self.mag_field = self.compass.read_mag
-		self.gravity = self.compass.read_accel
+		self.compass = Compass()
 		self.post_angle_correction = 0
 		self.arm_angle_correction = 0
 
 
-	def grav_correction(self, ):
-		pass
 
 	@property
 	def turn(self):
@@ -115,37 +110,30 @@ class Isspointer:
 		"""
 		Here I get the position of the pointer, the compass heading
 		and implement the geomagnetic declination or north off set
-
 		Dev: Reimannsum
 		Last Modified: Aug 27, 2019
 		"""
 
-		self.sensor = self._setup_compass()
+		self.compass = Pointing_Vector()
+
 		# I don't know that this is required
-		self.lat, self.lon = self._get_ISS_coordinates()
-		self.motor = self._setup_motor()
-		self.servo = self._setup_servo()
+		# self.lat, self.lon = self._get_ISS_coordinates()
 
-	def _setup_compass(self):
-		"""
-		Creates and returns an object
-		of the compas correction
-		> gm = geomag.GeoMag()
-		> mag = gm.GeoMag(42.5337, -83.7384)
-		> mag.dec
-		-7.12816029842447
-		"""
-		sensor = Compass()
-		gm = geomag.GeoMag()
-		mag = gm.GeoMag(42.5337, -83.7384)
-		sensor.set_magnetic_variance(mag.dec)
+		self.motor_base  = self._setup_motor(1, 400, 1)
+		self.motor_arm = self._setup_motor(2, 20, 191/2)
+		# self.servo = self._setup_servo()
 
-	def _setup_motor(self):
+
+
+	def _setup_motor(self, num=1, steps = 2000, gearing = 2.5):
 		"""
 		Creates and returns an object
 		of the Stepper motor controller
 		"""
-		return Stepper(12, 11, 13, 15)
+		if num == 1:
+			return Stepper(12, 11, 13, 15, steps, gearing)
+		else:
+			return Stepper(36, 37, 38, 40, steps, gearing)
 
 	def _setup_servo(self):
 		"""
@@ -171,8 +159,6 @@ class Isspointer:
 		obj = json.loads(response.read().decode('utf-8'))
 		return obj['iss_position']['latitude'], obj['iss_position']['longitude']
 
-	def rest(self, seconds):
-		new_data = self.sensor.read()
 
 
 	def start(self):
@@ -206,8 +192,8 @@ class Isspointer:
 
 			Avalon.info("ISS Position Update:")
 			print('Elevation :{}\nAzimuth :{}'.format(elevation, direction))
-			self.motor.set_azimuth(float(direction))
-			self.servo.set_angle(float(elevation))
+			self.motor_base.set_azimuth(float(direction))
+			self.motor_arm.set_angle(float(elevation))
 			time.sleep(5)
 
 
