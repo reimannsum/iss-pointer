@@ -131,9 +131,9 @@ class Isspointer:
 		of the Stepper motor controller
 		"""
 		if num == 1:
-			return Stepper(12, 11, 13, 15, steps, gearing)
+			return Stepper([12, 11, 13, 15], steps, gearing)
 		else:
-			return Stepper(36, 37, 38, 40, steps, gearing)
+			return Stepper([36, 37, 38, 40], steps, gearing)
 
 	def _setup_servo(self):
 		"""
