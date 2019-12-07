@@ -46,17 +46,19 @@ class Stepper(object):
 		'eigth': 0.125
 	}
 
-	def __init__(self, dir_pin, step_pin, ms1_pin, ms2_pin):
+	def __init__(self, pin_array, steps=1000, gearing=1):
 		GPIO.setmode(GPIO.BOARD)
-		self.dir_pin = dir_pin
-		self.step_pin = step_pin
-		self.ms1_pin = ms1_pin
-		self.ms2_pin = ms2_pin
+
+		self.dir_pin = pin_array[0]
+		self.step_pin = pin_array[1]
+		self.ms1_pin = pin_array[2]
+		self.ms2_pin = pin_array[3]
 		self.step_delay = 0.001
 		self._microstep_resolution = 'full'
 		self.current_pos = 0
 		# This will allow people to customize this for their own setup easily
-		self.steps_per_revolution = 1000
+		self.steps_per_revolution = steps
+		self.GEAR_RATIO = gearing
 
 		self.setup()
 
@@ -122,9 +124,9 @@ class Stepper(object):
 		sleep(self.step_delay)
 
 	def rotate(self, angle, cw=True):
-		steps = round(angle * 2.5 * 10 / 9)
+		steps = round(angle * self.GEAR_RATIO * 360/self.steps_per_revolution)
 		if cw:
-			if self.current_pos + steps < 1000:
+			if self.current_pos + steps < self.steps_per_revolution:
 				self.current_pos = self.current_pos + steps
 			else:
 				self.current_pos = self.current_pos + steps - self.steps_per_revolution
