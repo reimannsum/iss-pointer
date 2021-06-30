@@ -13,6 +13,8 @@ def xParV(x, v):
 	# (x' * v / norm(v)) * v / norm(v)
 	# = (x' * v) * v / norm(v)^2
 	# = (x' * v) * v / (v' * v)
+#	print(x)
+#	print(v)
 	return np.dot(x, v) / np.dot(v, v) * v
 
 
@@ -35,6 +37,8 @@ def xProjectV(x, v):
 def rotateAbout(a, b, theta):
 	"""Rotate vector a about vector b by theta radians."""
 	# Thanks user MNKY at http://math.stackexchange.com/a/1432182/81266
+	a = np.array (a)
+	b = np.array(b)
 	proj = xProjectV(a, b)
 	w = np.cross(b, proj['perp'])
 	return (proj['par'] +
@@ -42,6 +46,8 @@ def rotateAbout(a, b, theta):
 			linalg.norm(proj['perp']) * makeUnit(w) * np.sin(theta))
 
 def find_rotation(old_v, new_v):
+	old_v = np.array(old_v)
+	new_v = np.array(new_v)
 	rotation_vector = np.cross(old_v, new_v)/np.linalg.norm(np.cross(old_v, new_v))
 	angle_of_rotation = math.atan(np.linalg.norm(np.cross(old_v, new_v))/np.dot(old_v, new_v.T))
 	return rotation_vector.tolist(), angle_of_rotation
