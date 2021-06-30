@@ -22,16 +22,18 @@ It creates objects of the motor contoller and the servo controller.servo
 
 # The motor controller and servo controller
 #from vector import Correction
-import RPi.GPIO as GPIO
+#import GPIO
 from avalon_framework import Avalon
 from bin.compass import Compass
+from bin.screen import Screen
 from bin.motor import Stepper
-from bin.servo import Servo
+from bin.PointerVector import Pointing_Vector
+#from bin.servo import Servo
 from skyfield.api import Topos, load
 import json, time
 import urllib.request
 
-VERSION = "1.0.1"
+VERSION = "1.1.0"
 lat = 42.5337
 lon = -83.7384
 
@@ -57,33 +59,6 @@ class debug:
 
 	def debugger(self):
 		pass
-
-class Pointing_Vector:
-
-	def __init__(self):
-		self.compass = Compass()
-		self.post_angle_correction = 0
-		self.arm_angle_correction = 0
-
-
-
-	@property
-	def turn(self):
-		return self.post_angle_correction
-
-	@property
-	def point(self):
-		return self.arm_angle_correction
-
-	def correct_post(self, cw_angle):
-		self.post_angle_correction += cw_angle
-
-	def correct_arm(self, cw_angle):
-		self.arm_angle_correction += cw_angle
-
-
-
-
 
 
 class Isspointer:
@@ -114,13 +89,14 @@ class Isspointer:
 		Last Modified: Aug 27, 2019
 		"""
 
-		self.compass = Pointing_Vector()
 
 		# I don't know that this is required
 		# self.lat, self.lon = self._get_ISS_coordinates()
 
 		self.motor_base  = self._setup_motor(1, 400, 1)
 		self.motor_arm = self._setup_motor(2, 20, 191/2)
+		self.pointer = Pointing_Vector()
+		self.display = Screen()
 		# self.servo = self._setup_servo()
 
 
@@ -131,9 +107,9 @@ class Isspointer:
 		of the Stepper motor controller
 		"""
 		if num == 1:
-			return Stepper([12, 11, 13, 15], steps, gearing)
+			return Stepper([18, 17, 27, 22], steps, gearing) # 12, 11, 13, 15
 		else:
-			return Stepper([36, 37, 38, 40], steps, gearing)
+			return Stepper([5, 6, 12, 13], steps, gearing) # 29, 31, 32, 33
 
 	def _setup_servo(self):
 		"""
@@ -184,28 +160,42 @@ class Isspointer:
 			if abs(days) > 14:
 				satellites = load.tle(stations_url, reload=True)
 				satellite = satellites['ISS (ZARYA)']
+			self.pointer.check_gravity()
 			difference = satellite - observer
 			topocentric = difference.at(t)
 			alt, az, distance = topocentric.altaz()
-			elevation =  alt.degrees
-			direction = az.degrees
+
+			self.pointer.elevation_set(alt.degrees)
+			self.pointer.azimuth_set(az.degrees)
+			self.display.set_pointing(az.degrees, alt.degrees)
+			self.display.set_north(self.pointer.declination)
+			g = self.pointer.compass.gravity
+			self.display.set_gravity(g[0], g[1], g[2])
+
 
 			Avalon.info("ISS Position Update:")
-			print('Elevation :{}\nAzimuth :{}'.format(elevation, direction))
-			self.motor_base.set_azimuth(float(direction))
-			self.motor_arm.set_angle(float(elevation))
-			time.sleep(5)
+			#print(self.pointer.azimuth)
+			#print(self.pointer)
+			print('Elevation :{0:6.3f}\tAzimuth :{1:6.3f}\nArm Correction:{3:6.3f}\tBase Correction:{2:6.3f}'.format(alt.degrees, az.degrees, float(self.pointer.base_correction), float(self.pointer.arm_correction)))
+			print("Elev: {1:6.3f}\tAz: {0:6.3f}".format(float(self.pointer.azimuth), float(self.pointer.elevation)))
+			print(self.pointer.compass)
+			self.motor_base.set_azimuth(float(self.pointer.azimuth))
+			self.motor_arm.set_azimuth(float(self.pointer.elevation))
+			time.sleep(2.5)
 
 
 if __name__ == "__main__":
 	print_icon()
 	isspointer = Isspointer()  # Creates ISS pointer object
-	try:
-		isspointer.start()  # Starts the pointer
-	except:
-		isspointer.motor.__del__()
-	finally:
-		GPIO.cleanup()
+#	try:
+	isspointer.start()  # Starts the pointer
+#	except:
+#		isspointer.motor_arm.__del__()
+#		isspointer.motor_base.__del__()
+#	finally:
+#		GPIO.cleanup()
+#		pass
 else:
 	Avalon.error("This file cannot be imported!")
 	Avalon.error("Please run this file independently.")
+

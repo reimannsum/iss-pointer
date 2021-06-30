@@ -1,3 +1,4 @@
-*.pyc
-*.pyo
-__pycache__/
+/stations.txt
+/Leap_Second.dat
+/deltat.preds
+/deltat.data

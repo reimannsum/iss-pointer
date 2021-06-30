@@ -11,11 +11,12 @@ import time
 from math import cos, sin, sqrt, degrees, atan2, radians
 import board
 import busio
-import adafruit_lsm303dlh_mag
-import adafruit_lsm303_accel
-from rotateVectors import rotateAbout,find_rotation
+import adafruit_lsm9ds1
 from geomag.geomag import GeoMag as geomag
-
+try:
+	from .rotateVectors import rotateAbout,find_rotation
+except Exception as e:
+	from rotateVectors import rotateAbout, find_rotation
 
 
 
@@ -28,42 +29,47 @@ class Sensor:
 	def __init__(self):
 		# pulling the drivers for the chip
 		i2c = busio.I2C(board.SCL, board.SDA)
-		self.mag = adafruit_lsm303dlh_mag.LSM303DLH_Mag(i2c)
-		self.acc = adafruit_lsm303_accel.LSM303_Accel(i2c)
+		self.sensor = adafruit_lsm9ds1.LSM9DS1_I2C(i2c)
 
-
-	@property
 	def read_mag(self):
-		x, y, z = self.mag.magnetic
+		x, y, z = self.sensor.magnetic
 		return (x,z,y)
 
-
-	@property
 	def read_accel(self):
-		x, y, z = self.acc.acceleration
+		x, y, z = self.sensor.acceleration
 		return (x,z,y)
 
 
 def cart2sph(x, y, z):
 	"""
 	:param x: east is positive
-	:param y: north is positive
-	:param z: up is positive
+	:param y: up is positive
+	:param z: north is positive
 	:return: degrees
 	"""
 	XsqPlusZsq = x ** 2 + z ** 2
 	r = sqrt(XsqPlusZsq + y ** 2)  # r
-	elev = degrees(atan2(XsqPlusZsq, y))  # phi
-	az = degrees(atan2(y, x)) # theta
+	elev = degrees(atan2(y, XsqPlusZsq))  # phi
+	az = degrees(atan2(x, z)) # theta
+	if az == 0:
+		az = 0
+	if elev == 0:
+		elev = 0
 	if az >= 360:
 		return az, elev, r
 	else:
 		return 0 + az, elev, r
 
-def sph2cart(r, theta, elev):
-	x = round(r * cos(radians(0 + elev)) * cos(radians(theta + 90)),8)
-	y = round(r * cos(radians(0 + elev)) * sin(radians(theta + 90)),8)
-	z = round(r * sin(radians(0 + elev)),8)
+def sph2cart(az, elev, r):
+	"""
+	:param az: Rotation east from north
+	:param elev: rotation up from horizontal
+	:param r: length of vector
+	:return: carteasian coordinates
+	"""
+	x = round(r * cos(radians(0 + elev)) * cos(radians(az + 90)), 8)
+	z = round(r * cos(radians(0 + elev)) * sin(radians(az + 90)), 8)
+	y = round(r * sin(radians(0 + elev)),8)
 	return x, y, z
 
 def get_declenation():
@@ -74,6 +80,7 @@ def get_declenation():
 class Compass:
 	"""
 	This will handle interpreting all sensor readings
+	this holds the last data read and interpreted
 	gravity: is the XYZ vector for gravity
 	x: east is positive
 	y: north is positive
@@ -81,100 +88,135 @@ class Compass:
 	"""
 
 	def __init__(self):
-		self.compass = Sensor()
-		self.last_check_time = 0
-		self.check_sensor()
 
-		self.grav_rot_vect, self.grav_rot_angle = self.grav_align()
-		# find the vector that must be rotated about, and the angle
-		# to rotate about that vector in order to align the gravity
-		# vector from the sensor with that of gravity, allowing
-		# orientation to true gravity
-
-		self.correction = self.grav_correct((0,10,0))
-		# (0, 10, 0) is the cardinal vector for the spherical coords
-		# used for the rest of the program,
-		# in spherical this translates to (0, 0, 10)
-		#   0 azmith (angle from north),
-		#   0 elevation from horizon,
-		#   10 distance from observer (discarded)
-
-		self.sph_correction = cart2sph(self.correction)
-		# get the angle
-		# from assumed north and from assumed horizontal that the real north
-		# horizontal is pointing
-
+		#  Static value, this changes based on LAt, Lon and so is fixed in this implementation
 		self.declination = get_declenation()
-		# Creates and returns an object
-		# of the compas correction
-		# > gm = geomag.GeoMag()
-		# > mag = gm.GeoMag(42.5337, -83.7384)
 		# > mag.dec
 		# -7.12816029842447
 
+		# create a sensor object to read data from the chip.
+		self.sensors = Sensor()
 
+		# Initialize variables
+		self.N_correction = 0  # how many degrees assumed north is from true north
+		self.gravity = (0.0,0.0,0.0)
+		self.mag = (0.0, 0.0, 0.0)
+		self.spherical_correction = cart2sph(0, 1, 0)
+		self.gravity_rotation_vector = (0, 0, 0)
+		self.gravity_rotation_angle = 0
 
-		self.mag_N = self.grav_correct(self.compass.read_mag)
+		self.update()
+		print("spherical representation: ")
+		print(cart2sph(self.mag_Up[0], self.mag_Up[1], self.mag_Up[2]))
+		# get the azimuth angle of north to know what to subtract to correct for
+		# not pointing the device north before running.
 
 		pass
 
-	def check_sensor(self):
-		if 5 > (time.time() - self.last_check_time):
-			return False, self.__gravity
+	def __repr__(self):
+		string = ""
+		string += "Gravity:\nx: {0:4.3f}  y: {1:4.3f}  z: {0:4.3f}\n".format(self.gravity[0], self.gravity[1], self.gravity[2])
+		string += "Spherical Fix:\nAz: {0:4.3f}  Elev: {1:4.3f}\n".format(self.spherical_correction[0], self.spherical_correction[1])
+		string += "Fix Vect: ({0:4.3f},{1:4.3f},{2:4.3f})  Fix Angle: {3:4.3f}\n".format(self.gravity_rotation_vector[0], self.gravity_rotation_vector[1], self.gravity_rotation_vector[2], degrees(self.gravity_rotation_angle))
+		string += "Mag field: \n({0:4.3f},{1:4.3f},{2:4.3f})\n".format(self.mag_Up[0], self.mag_Up[1], self.mag_Up[2])
+		return string
+
+	def print(self):
+		string = ""
+		string += "Gravity:\nx:{0:4.3f}  y:{1:4.3f}  z:{0:4.3f}\n".format(self.gravity[0], self.gravity[1], self.gravity[2])
+		string += "Az: {0:4.3f}  Elev: {1:4.3f}\n".format(self.spherical_correction[0], self.spherical_correction[1])
+		string += "Fix Vect: ({0:4.3f},{1:4.3f},{2:4.3f})  Fix Angle: {3:4.3f}\n".format(self.gravity_rotation_vector[0], self.gravity_rotation_vector[1], self.gravity_rotation_vector[2], degrees(self.gravity_rotation_angle))
+		string += "Mag field: \n({0:4.3f},{1:4.3f},{2:4.3f})\n".format(self.mag_Up[0], self.mag_Up[1], self.mag_Up[2])
+		thing = cart2sph(self.mag_Up[0], self.mag_Up[1], self.mag_Up[2])
+		string += "Mag fix: Az: {0:4.3f}  Elev: {1:4.3f}".format(thing[0], thing[1])
+		return string
+
+	def update(self):
+		old_grav = self.gravity
+		self.gravity = self.sensors.read_accel()
+		different = self.difference_check(old_grav, self.gravity)
+		# Check if gravity has changed by at least 1 degree
+		if different:
+			# find the vector that must be rotated about, and the angle
+			# to rotate about that vector in order to align the gravity
+			# vector from the sensor with that of gravity, allowing
+			# orientation to true gravity
+			self.gravity_rotation_vector, self.gravity_rotation_angle = find_rotation((0, 0, -9.8), self.gravity)
 		else:
-			self.__gravity = self.compass.read_accel
-			# sets gravity to Cartesian coords (X,Y,Z)
-			self.last_check_time = int(time.time())
-			return True, self.__gravity
+			self.gravity = old_grav
+			# set gravity back to not compound changes
 
-	def update_grav(self):
-		"""
-		This will check if there is any significant difference
-		in grav readings. if there is it will update gravity and
-		:return: Boolean
-		"""
+		self.mag = self.sensors.read_mag()
+		self.mag_Up = self.orient_up(self.mag)
+		# get the angle of the magnetic field relative to the orientation of gravity
+		self.N_correction = cart2sph(self.mag_Up[0], self.mag_Up[1], self.mag_Up[2])[0]
+		self.N_correction += self.declination
 
+	def difference_check(self, old_grav, new_grav):
+		old_x, old_y, old_z = old_grav
+		new_x, new_y, new_z = new_grav
+		dx = old_x - new_x
+		dy = old_y - new_y
+		dz = old_z - new_z
+
+		dev = sqrt(dx**2+dy**2+dz**2)
+
+		if dev > 0.15:
+			return True # vector has changed by 1 degree
+		return False # vector is less than 1 degree different from previous value
 
 	def get_grav(self):
-		return self.__gravity
+		return self.gravity
+
+	def get_correction(self):
+		return self.spherical_correction
 
 	@property
-	def gravity(self):
-		return self.get_grav()
+	def correction(self):
+		return  self.get_correction()
+	@property
+	def N_correct(self):
+		return self.N_correction
 
-	def grav_correct(self, other_vector):
-		return rotateAbout(other_vector, self.grav_rot_vect, self.grav_rot_angle)
-
-	def grav_align(self):
-		return  find_rotation((0,0,-9.8), self.__gravity)
+	def orient_up(self, vector):
+		# Reorientates Vector to a gravity up orientation
+		return rotateAbout(vector, self.gravity_rotation_vector, self.gravity_rotation_angle)
 
 if __name__ == "__main__":
+	print("XYZ to ThetaPhiR:")
 	print("Cardinal Directions:\nEast:")
 	print(cart2sph(3,0,0))
 	print("North:")
-	print(cart2sph(0,3,0))
+	print(cart2sph(0,0,3))
 	print("West:")
 	print(cart2sph(-3,0,0))
 	print("South:")
-	print(cart2sph(0,-3,0))
-	print("Up:")
-	print(cart2sph(0,0,3))
-	print("Down:")
 	print(cart2sph(0,0,-3))
+	print("Up:")
+	print(cart2sph(0,3,0))
+	print("Down:")
+	print(cart2sph(0,-3,0))
+	print("ThetaPhiR to XYZ")
+	print("\nNorth:")
+	print(sph2cart(0, 0, 3))
+	print("East:")
+	print(sph2cart(270, 0, 3))
+	print("South:")
+	print(sph2cart(180, 0, 3))
+	print("West:")
+	print(sph2cart(90, 0, 3))
+	print("Up:")
+	print(sph2cart(0, 90, 3))
+	print("Down:")
+	print(sph2cart(0, -90, 3))
+	print("\n\n 1% deviation at standard strength:")
+	print(sph2cart(1,0,10))
+	print(sph2cart(0,1,10))
+
+	compass = Compass()
+	print(compass)
 
 	print("Magnetic Declenation:")
 	print(get_declenation())
-	print("\nNorth:")
-	print(sph2cart(3, 0, 0))
-	print("East:")
-	print(sph2cart(3, 270, 0))
-	print("South:")
-	print(sph2cart(3, 180, 0))
-	print("West:")
-	print(sph2cart(3, 90, 0))
-	print("Up:")
-	print(sph2cart(3, 0, 90))
-	print("Down:")
-	print(sph2cart(3, 0, -90))
 else:
 	pass

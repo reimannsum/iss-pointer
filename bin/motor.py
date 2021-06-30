@@ -16,7 +16,7 @@ Last Modified: Aug 27, 2019
 from avalon_framework import Avalon
 from enum import Enum
 from time import sleep
-from exceptions import InvalidDirectionError
+from .exceptions import InvalidDirectionError
 import RPi.GPIO as GPIO
 
 VERSION = "1.0.1"
@@ -29,7 +29,7 @@ class DIRECTION(Enum):
 
 class Stepper(object):
 
-	GEAR_RATIO = 2.5
+#	GEAR_RATIO = 2.5
 
 	MICROSTEP_TRUTH_TABLE = {
 		# resolution: (ms1, ms2)
@@ -47,7 +47,7 @@ class Stepper(object):
 	}
 
 	def __init__(self, pin_array, steps=1000, gearing=1):
-		GPIO.setmode(GPIO.BOARD)
+		#GPIO.setmode(GPIO.BOARD) # adafruit drivers set this to BCM numbering
 
 		self.dir_pin = pin_array[0]
 		self.step_pin = pin_array[1]
@@ -57,8 +57,8 @@ class Stepper(object):
 		self._microstep_resolution = 'full'
 		self.current_pos = 0
 		# This will allow people to customize this for their own setup easily
-		self.steps_per_revolution = steps
-		self.GEAR_RATIO = gearing
+		self.steps_per_revolution = steps * gearing
+#		self.GEAR_RATIO = gearing
 
 		self.setup()
 
@@ -124,7 +124,8 @@ class Stepper(object):
 		sleep(self.step_delay)
 
 	def rotate(self, angle, cw=True):
-		steps = round(angle * self.GEAR_RATIO * 360/self.steps_per_revolution)
+		steps = round(angle *  self.steps_per_revolution/360)
+#		print("Currently at : {0}, moving {1}".format(self.current_pos,steps))
 		if cw:
 			if self.current_pos + steps < self.steps_per_revolution:
 				self.current_pos = self.current_pos + steps
@@ -137,6 +138,7 @@ class Stepper(object):
 				self.current_pos = self.current_pos - steps + self.steps_per_revolution
 		for _ in range(steps):
 			self.step()
+#		print("moved")
 
 	def set_azimuth(self, azimuth):
 		"""
@@ -149,8 +151,9 @@ class Stepper(object):
 		the iss pointer.
 		"""
 		# 360 degrees / steps per revolution * current steps
-		current_angle = 360 / self.steps_per_revolution * self.current_pos
+		current_angle = 360 * self.current_pos / (self.steps_per_revolution)
 		angle_to_rotate = azimuth - current_angle
+#		print("azimuth: {0:4.3f}\tcurrent angle: {1:4.3f}\tTo rotate: {2:4.4f}".format(azimuth,current_angle,angle_to_rotate))
 		if angle_to_rotate == 0:  # Do not rotate when change in angle is 0
 			pass
 		elif angle_to_rotate > 0:  # Rotate clockwise
