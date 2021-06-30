@@ -9,7 +9,7 @@ Last Modified: Sept 04, 2019
 """
 import time
 from math import cos, sin, sqrt, degrees, atan2, radians
-import board
+import adafruit_blinka.board as board
 import busio
 import adafruit_lsm9ds1
 from geomag.geomag import GeoMag as geomag
