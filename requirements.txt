@@ -1,7 +1,7 @@
 python_version >= '3.7'
 -i avalon-framework
 -i skyfield
--i board
 -i adafruit-blinka
--i Adafruit_LSM303
+-i Adafruit-circuitpython-LSM303
+-i adafruit-circuitpython-ssd1306
 -i GeoMag
