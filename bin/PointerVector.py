@@ -10,7 +10,7 @@ from bin.Angle import HalfAngle, Angle
 from bin.compass import *
 
 
-class Pointing_Vector:
+class PointingVector:
     # stores the correction due to compass readings for
     # calibrating the pointer
     #
