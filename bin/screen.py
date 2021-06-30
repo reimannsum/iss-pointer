@@ -2,7 +2,7 @@
 # Screen class for displaying information
 # for the ISSPointer
 
-from adafruit_blinka.board import SCL, SDA
+from adafruit_blinka.board.raspberrypi.raspi_40pin import SCL, SDA
 import busio
 from PIL import Image, ImageDraw, ImageFont
 import time

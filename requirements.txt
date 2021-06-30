@@ -5,3 +5,5 @@ python_version >= '3.7'
 -i Adafruit-circuitpython-LSM303
 -i adafruit-circuitpython-ssd1306
 -i GeoMag
+-i RPi.GPIO2
+-i gpiod
