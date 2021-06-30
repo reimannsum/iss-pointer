@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # test using the screen to show the current state of the sensor
 import time
-from  screen import screen
-from compass import compass
+from bin.screen import Screen
+from bin.compass import compass
 
-myScreen = screen.Screen()
+myScreen = Screen()
 myCompass = compass.Compass()
 
 while True:
