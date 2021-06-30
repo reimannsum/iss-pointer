@@ -8,7 +8,7 @@ Dev: Reimannsum
 Last Modified: Oct 16, 2019
 """
 import time
-import board
+import adafruit_blinka.board as board
 import busio
 import lsm303dlh_mag
 import lsm303_accel
@@ -19,7 +19,6 @@ from time import time
 i2c = busio.I2C(board.SCL, board.SDA)
 mag_sensor = lsm303dlh_mag.LSM303DLH_Mag(i2c)
 acc_sensor = lsm303_accel.LSM303_Accel(i2c)
-#display = adafruit_ssd1306.SSD1306_I2C(128, 32, i2c, addr=0x3c)
 
 max_acc_x, max_acc_y, max_acc_z = 0,0,0
 max_mag_x, max_mag_y, max_mag_z = 0,0,0
