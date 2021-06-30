@@ -5,22 +5,32 @@
 import pytest
 from bin.PointerVector import Angle
 
+@pytest.fixture
+def angle_zero():
+	return Angle()
 
-test1 = Angle()
-test2 = Angle(180)
-if test1.angle == 0 and test2.angle == 180:
-	print("Angle Initializes.")
-if test1 +5 == 5:
-	print("Angles Add.")
-if test1 + 365 == 5:
-	print("Angles add overflow")
-if test1 + -5 == 355:
-	print("Angles add negative and underflow")
-if test1 - 5 == 355:
-	print("Angles subtract and underflow")
+@pytest.fixture
+def angle_180():
+	return Angle(180)
 
-test1 = Angle(-50)
-print(test1.angle)
-test1+= 0
-print(test1.angle)
+@pytest.fixture
+def angle_negative_five():
+	return Angle(-5)
+
+def test_initial_conditions():
+	assert angle_zero.angle == 0
+	assert angle_180.angle == 180
+
+
+# noinspection PyTypeChecker
+def test_addition_and_subtraction():
+	assert angle_zero + 5 == 5 		 # angles add
+	assert angle_zero + 365 == 5	 # angles overflow when adding
+	assert angle_zero - 5 == 355	 # angles underflow when subtracting
+	assert angle_zero + -5 == 355	 # angles underflow when adding a negative
+
+
+
+
+
 
