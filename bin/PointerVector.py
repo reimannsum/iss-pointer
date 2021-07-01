@@ -6,7 +6,7 @@ Project: ISS Pointer
 Dev: Reimannsum
 Date Created: Dec 19, 2019
 """
-from bin.Angle import HalfAngle, Angle
+from bin.Angle import Angle
 from bin.compass import *
 
 
