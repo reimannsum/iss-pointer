@@ -17,9 +17,9 @@ class PointingVector:
 
     def __init__(self):
         self.azimuth = Angle()
-        self.elevation = HalfAngle()
-        self.base_correction = HalfAngle()
-        self.arm_correction = HalfAngle()
+        self.elevation = Angle(0, 180)
+        self.base_correction = Angle(0, 180)
+        self.arm_correction = Angle(0, 180)
         self.last_grav = (0, 0)
         self.compass = Compass()
         self.N_correction = 0
@@ -34,7 +34,7 @@ class PointingVector:
 
     def elevation_set(self, angle):
         angle = float(angle)  # don't worry if you are passed a string number
-        self.elevation = HalfAngle(angle)
+        self.elevation = Angle(angle, 180)
         self.elevation_add(self.arm_correction)
 
     # This keeps us from worrying about being given an elevation over 90 degrees
@@ -54,11 +54,11 @@ class PointingVector:
             print("{0:5.3f} and {1:5.3f} are greater than 90 when added together".format(float(self.elevation), angle))
             print(total)
             leftover = total - 90
-            self.elevation = HalfAngle(90 - leftover)
+            self.elevation = Angle(90 - leftover, 180)
         elif 270 > total > 180:
             print("{0:5.3f} and {1:5.3f} are less than -90 when added together".format(self.elevation, angle))
             leftover = total + 180
-            self.elevation = HalfAngle(360 - leftover)
+            self.elevation = Angle(360 - leftover, 180)
         else:
             self.elevation += angle
 
@@ -82,7 +82,7 @@ class PointingVector:
         self.declination = self.compass.declination
         # Declination is measured in degrees CW from magnetic north
         # to point to true north
-        self.base_correction = HalfAngle()
+        self.base_correction = Angle(0, 180)
         self.base_correction += self.N_correction
         self.base_correction += self.declination
 
@@ -92,7 +92,7 @@ class PointingVector:
             n_az, n_elev, garbage = self.compass.get_correction()
             self.set_true_north()
             self.last_grav = (n_az, n_elev)
-            self.arm_correction = HalfAngle()
+            self.arm_correction = Angle(0,180)
             self.arm_correction += n_elev
 
     def __repr__(self):
