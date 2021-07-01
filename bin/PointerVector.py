@@ -64,16 +64,16 @@ class PointingVector:
 
     def correct_base(self, cw_angle):
         """
-		:param cw_angle: is given the angle from true north
-		:return: returns the angle given the current orientation
-		"""
+        :param cw_angle: is given the angle from true north
+        :return: returns the angle given the current orientation
+        """
         return self.base_correction + cw_angle
 
     def correct_arm(self, cw_angle):
         """
-		:param cw_angle: is given the angle from horizontal
-		:return: returns the angle given the current orientatio
-		"""
+        :param cw_angle: is given the angle from horizontal
+        :return: returns the angle given the current orientatio
+        """
         return self.arm_correction + cw_angle
 
     def set_true_north(self):
@@ -101,5 +101,3 @@ class PointingVector:
                                                                                             self.base_correction,
                                                                                             self.arm_correction,
                                                                                             self.declination)
-
-

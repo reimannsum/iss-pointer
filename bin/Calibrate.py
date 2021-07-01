@@ -7,13 +7,13 @@ Project: ISS Pointer
 Dev: Reimannsum
 Last Modified: Oct 16, 2019
 """
-import time
-import adafruit_blinka.board as board
-import busio
-import lsm303dlh_mag
-import lsm303_accel
 from math import sqrt as root
 from time import time
+
+import adafruit_blinka.board as board
+import busio
+import lsm303_accel
+import lsm303dlh_mag
 
 # pulling the drivers for the chip
 i2c = busio.I2C(board.SCL, board.SDA)
@@ -34,47 +34,47 @@ max_mag_magnitude = 0
 count = 0
 t_end = time() + 60 * 3  # run for 3 minutes
 while time() < t_end:
-    acc_x, acc_y, acc_z = acc_sensor.acceleration
-    mag_x, mag_y, mag_z = mag_sensor.magnetic
-    acc_magnitude = root((acc_x ** 2) + (acc_y ** 2) + (acc_z ** 2))
-    mag_magnitude = root((mag_x ** 2) + (mag_y ** 2) + (mag_z ** 2))
+	acc_x, acc_y, acc_z = acc_sensor.acceleration
+	mag_x, mag_y, mag_z = mag_sensor.magnetic
+	acc_magnitude = root((acc_x ** 2) + (acc_y ** 2) + (acc_z ** 2))
+	mag_magnitude = root((mag_x ** 2) + (mag_y ** 2) + (mag_z ** 2))
 
-    if max_acc_x < acc_x:
-        max_acc_x = acc_x
-    if max_acc_y < acc_y:
-        max_acc_y = acc_y
-    if max_acc_z < acc_z:
-        max_acc_z = acc_z
-    if max_mag_x < mag_x:
-        max_mag_x = mag_x
-    if max_mag_y < mag_y:
-        max_mag_y = mag_y
-    if max_mag_z < mag_z:
-        max_mag_z = mag_z
+	if max_acc_x < acc_x:
+		max_acc_x = acc_x
+	if max_acc_y < acc_y:
+		max_acc_y = acc_y
+	if max_acc_z < acc_z:
+		max_acc_z = acc_z
+	if max_mag_x < mag_x:
+		max_mag_x = mag_x
+	if max_mag_y < mag_y:
+		max_mag_y = mag_y
+	if max_mag_z < mag_z:
+		max_mag_z = mag_z
 
-    if min_acc_x > acc_x:
-        min_acc_x = acc_x
-    if min_acc_y > acc_y:
-        min_acc_y = acc_y
-    if min_acc_z > acc_z:
-        min_acc_z = acc_z
-    if min_mag_x > mag_x:
-        min_mag_x = mag_x
-    if min_mag_y > mag_y:
-        min_mag_y = mag_y
-    if min_mag_z > mag_z:
-        min_mag_z = mag_z
+	if min_acc_x > acc_x:
+		min_acc_x = acc_x
+	if min_acc_y > acc_y:
+		min_acc_y = acc_y
+	if min_acc_z > acc_z:
+		min_acc_z = acc_z
+	if min_mag_x > mag_x:
+		min_mag_x = mag_x
+	if min_mag_y > mag_y:
+		min_mag_y = mag_y
+	if min_mag_z > mag_z:
+		min_mag_z = mag_z
 
-    if max_acc_magnitude < acc_magnitude:
-        max_acc_magnitude = acc_magnitude
-    if max_mag_magnitude < mag_magnitude:
-        max_mag_magnitude = mag_magnitude
+	if max_acc_magnitude < acc_magnitude:
+		max_acc_magnitude = acc_magnitude
+	if max_mag_magnitude < mag_magnitude:
+		max_mag_magnitude = mag_magnitude
 
-    if round(time()) % 2 == 0:
-        print("Readings from the sensor:")
-        print("Acceleration: ({0.3}, {1}, {2}) magnitude {3}".format(acc_x, acc_y, acc_z, acc_magnitude))
-        print("Magnetism: ({0}, {1}, {2}) magnitude {3}".format(mag_x, mag_y, mag_z, mag_magnitude))
-    count += 1
+	if round(time()) % 2 == 0:
+		print("Readings from the sensor:")
+		print("Acceleration: ({0.3}, {1}, {2}) magnitude {3}".format(acc_x, acc_y, acc_z, acc_magnitude))
+		print("Magnetism: ({0}, {1}, {2}) magnitude {3}".format(mag_x, mag_y, mag_z, mag_magnitude))
+	count += 1
 
 range_acc_x = max_acc_x - min_acc_x
 range_acc_y = max_acc_y - min_acc_y

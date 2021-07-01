@@ -10,9 +10,10 @@ Last Modfied: Dec 18, 2017
 Dev: K4YT3X IZAYOI
 Last Modified: December 12, 2018
 """
-from avalon_framework import Avalon
-import RPi.GPIO as GPIO
 import time
+
+import RPi.GPIO as GPIO
+from avalon_framework import Avalon
 
 VERSION = "1.0.0"
 
