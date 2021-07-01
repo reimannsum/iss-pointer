@@ -1,9 +1,12 @@
 python_version >= '3.7'
 -i avalon-framework
--i skyfield
 -i adafruit-blinka
 -i Adafruit-circuitpython-LSM303
 -i adafruit-circuitpython-ssd1306
--i GeoMag
 -i RPi.GPIO2
 -i gpiod
+Pillow>=8.2.0
+geomag>=0.9.2015
+numpy>=1.19.2
+pytest>=6.2.4
+skyfield>=1.31
