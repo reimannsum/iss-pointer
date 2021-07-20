@@ -64,3 +64,8 @@ def test_sphere_to_cart_conversion():
     test = sph2cart(*sph_down)
     print("converting (0,-90):\n()".format(test))
     assert test == (0, -1, 0)
+
+    test = sph2cart(1, 0, 10)
+    assert test[0] == 0.17452406  # checking what a 1 deg deviation is a standard grav strength
+    test = sph2cart(0, 1, 10)
+    assert test[1] == 0.17452406
