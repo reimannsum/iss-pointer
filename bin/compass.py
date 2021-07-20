@@ -7,7 +7,7 @@ Project: ISS Pointer
 Dev: Reimannsum
 Last Modified: Sept 04, 2019
 """
-from math import cos, sin, sqrt, degrees, atan2, radians
+from math import cos, sin, degrees, atan2, radians
 
 import adafruit_blinka.board as board
 import adafruit_lsm9ds1
@@ -23,17 +23,29 @@ class Sensor:
 
 	"""
 
-	def __init__(self):
-		# pulling the drivers for the chip
-		i2c = busio.I2C(board.SCL, board.SDA)
-		self.sensor = adafruit_lsm9ds1.LSM9DS1_I2C(i2c)
+	def __init__(self, test=False, givenM=(0, 0, 0), givenA=(0,0,0)):
+		if not test:
+			self.test = False
+			# pulling the drivers for the chip
+			i2c = busio.I2C(board.SCL, board.SDA)
+			self.sensor = adafruit_lsm9ds1.LSM9DS1_I2C(i2c)
+		else:
+			self.test = True
+			self.mag_reading = givenM
+			self.accel_reading = givenA
 
 	def read_mag(self):
-		x, y, z = self.sensor.magnetic
+		if not self.test:
+			x, y, z = self.sensor.magnetic
+		else:
+			x, y, z = self.mag_reading
 		return x, z, y
 
 	def read_accel(self):
-		x, y, z = self.sensor.acceleration
+		if not self.test:
+			x, y, z = self.sensor.acceleration
+		else:
+			x,y,z = self.accel_reading
 		return x, z, y
 
 
@@ -45,7 +57,7 @@ def cart2sph(x, y, z):
 	:return: degrees
 	"""
 	XsqPlusZsq = x ** 2 + z ** 2
-	r = sqrt(XsqPlusZsq + y ** 2)  # r
+	r = (XsqPlusZsq + y ** 2) ** 0.5  # r
 	elev = degrees(atan2(y, XsqPlusZsq))  # phi
 	az = degrees(atan2(x, z))  # theta
 	if az == 0:
@@ -87,7 +99,7 @@ class Compass:
 	z: up is positive
 	"""
 
-	def __init__(self):
+	def __init__(self, test=False, givenM=(0, 0, 0), givenA=(0,0,0)):
 
 		#  Static value, this changes based on LAt, Lon and so is fixed in this implementation
 		self.declination = get_declination()
@@ -95,7 +107,10 @@ class Compass:
 		# -7.12816029842447
 
 		# create a sensor object to read data from the chip.
-		self.sensors = Sensor()
+		if test:
+			self.sensors = Sensor(test, givenM, givenA)
+		else:
+			self.sensors = Sensor()
 
 		# Initialize variables
 		self.N_correction = 0  # how many degrees assumed north is from true north
@@ -115,8 +130,8 @@ class Compass:
 
 	def __repr__(self):
 		string = ""
-		string += "Gravity:\nx: {0:4.3f}  y: {1:4.3f}  z: {0:4.3f}\n".format(self.gravity[0], self.gravity[1],self.gravity[2])
-		string += "Spherical Fix:\nAz: {0:4.3f}  Elev: {1:4.3f}\n".format(self.spherical_correction[0],self.spherical_correction[1])
+		string += "Gravity:\nx: {0:4.3f}  y: {1:4.3f}  z: {0:4.3f}\n".format(self.gravity[0], self.gravity[1], self.gravity[2])
+		string += "Spherical Fix:\nAz: {0:4.3f}  Elev: {1:4.3f}\n".format(self.spherical_correction[0], self.spherical_correction[1])
 		string += "Fix Vect: ({0:4.3f},{1:4.3f},{2:4.3f})  Fix Angle: {3:4.3f}\n".format(
 			self.gravity_rotation_vector[0], self.gravity_rotation_vector[1], self.gravity_rotation_vector[2],
 			degrees(self.gravity_rotation_angle))
@@ -125,7 +140,7 @@ class Compass:
 
 	def print(self):
 		string = ""
-		string += "Gravity:\nx:{0:4.3f}  y:{1:4.3f}  z:{0:4.3f}\n".format(self.gravity[0], self.gravity[1],self.gravity[2])
+		string += "Gravity:\nx:{0:4.3f}  y:{1:4.3f}  z:{0:4.3f}\n".format(self.gravity[0], self.gravity[1], self.gravity[2])
 		string += "Az: {0:4.3f}  Elev: {1:4.3f}\n".format(self.spherical_correction[0], self.spherical_correction[1])
 		string += "Fix Vect: ({0:4.3f},{1:4.3f},{2:4.3f})  Fix Angle: {3:4.3f}\n".format(
 			self.gravity_rotation_vector[0], self.gravity_rotation_vector[1], self.gravity_rotation_vector[2],
