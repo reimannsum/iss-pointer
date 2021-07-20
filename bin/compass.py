@@ -35,18 +35,18 @@ class Sensor:
 			self.accel_reading = givenA
 
 	def read_mag(self):
-		if not self.test:
-			x, y, z = self.sensor.magnetic
+		if not self.test:  # I believe this is a hack to avoid dealing with the orientation of the chip on the device
+			x, z, y = self.sensor.magnetic
 		else:
 			x, y, z = self.mag_reading
-		return x, z, y
+		return x, y, z
 
 	def read_accel(self):
-		if not self.test:
-			x, y, z = self.sensor.acceleration
+		if not self.test:  # I believe this is a hack to avoid dealing with the orientation of the chip on the device
+			x, z, y = self.sensor.acceleration
 		else:
 			x, y, z = self.accel_reading
-		return x, z, y
+		return x, y, z
 
 
 def cart2sph(x, y, z):
@@ -116,10 +116,10 @@ class Compass:
 		self.N_correction = 0  # how many degrees assumed north is from true north
 		self.gravity = (0.0, 0.0, 0.0)
 		self.mag = (0.0, 0.0, 0.0)
-		self.spherical_correction = cart2sph(0, 1, 0)
+		self.mag_Up = (0.0, 0.0, 0.0)
+		self.spherical_correction = cart2sph(0, 1, 0)  # unit vector of up
 		self.gravity_rotation_vector = (0, 0, 0)
 		self.gravity_rotation_angle = 0
-		self.mag_Up[0], self.mag_Up[1], self.mag_Up[2] = (0.0, 0.0, 0.0)
 
 		self.update()
 		print("spherical representation: ")
