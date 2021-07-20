@@ -46,6 +46,26 @@ def test_sphere_to_cart_conversion():
     test = sph2cart(*sph_north)
     print("converting (0,0):\n{}".format(test))
     assert test == (0, 0, 1)
+    test = sph2cart(*sph_east)
+    print("converting (90,0):\n{}".format(test))
+    assert test == (1, 0, 0)
+    test = sph2cart(*sph_south)
+    print("converting (180,0):\n{}".format(test))
+    assert test == (0, 0, -1)
+    test = sph2cart(*sph_west)
+    print("converting (270,0):\n{}".format(test))
+    assert test == (-1, 0, 0)
+    test = sph2cart(*sph_west2)
+    print("converting (-90,0):\n{}".format(test))
+    assert test == (-1, 0, 0)
+    test = sph2cart(*sph_up)
+    print("converting (0,90):\n()".format(test))
+    assert test == (0, 1, 0)
+    test = sph2cart(*sph_down)
+    print("converting (0,-90):\n()".format(test))
+    assert test == (0, -1, 0)
+
+
 
 
 
