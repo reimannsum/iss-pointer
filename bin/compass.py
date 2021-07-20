@@ -130,8 +130,10 @@ class Compass:
 
 	def __repr__(self):
 		string = ""
-		string += "Gravity:\nx: {0:4.3f}  y: {1:4.3f}  z: {0:4.3f}\n".format(self.gravity[0], self.gravity[1], self.gravity[2])
-		string += "Spherical Fix:\nAz: {0:4.3f}  Elev: {1:4.3f}\n".format(self.spherical_correction[0], self.spherical_correction[1])
+		string += "Gravity:\nx: {0:4.3f}  y: {1:4.3f}  z: {0:4.3f}\n".format(
+			self.gravity[0], self.gravity[1], self.gravity[2])
+		string += "Spherical Fix:\nAz: {0:4.3f}  Elev: {1:4.3f}\n".format(
+			self.spherical_correction[0], self.spherical_correction[1])
 		string += "Fix Vect: ({0:4.3f},{1:4.3f},{2:4.3f})  Fix Angle: {3:4.3f}\n".format(
 			self.gravity_rotation_vector[0], self.gravity_rotation_vector[1], self.gravity_rotation_vector[2],
 			degrees(self.gravity_rotation_angle))
@@ -140,8 +142,10 @@ class Compass:
 
 	def print(self):
 		string = ""
-		string += "Gravity:\nx:{0:4.3f}  y:{1:4.3f}  z:{0:4.3f}\n".format(self.gravity[0], self.gravity[1], self.gravity[2])
-		string += "Az: {0:4.3f}  Elev: {1:4.3f}\n".format(self.spherical_correction[0], self.spherical_correction[1])
+		string += "Gravity:\nx:{0:4.3f}  y:{1:4.3f}  z:{0:4.3f}\n".format(
+			self.gravity[0], self.gravity[1], self.gravity[2])
+		string += "Az: {0:4.3f}  Elev: {1:4.3f}\n".format(
+			self.spherical_correction[0], self.spherical_correction[1])
 		string += "Fix Vect: ({0:4.3f},{1:4.3f},{2:4.3f})  Fix Angle: {3:4.3f}\n".format(
 			self.gravity_rotation_vector[0], self.gravity_rotation_vector[1], self.gravity_rotation_vector[2],
 			degrees(self.gravity_rotation_angle))
@@ -178,11 +182,22 @@ class Compass:
 		dy = old_y - new_y
 		dz = old_z - new_z
 
-		dev = sqrt(dx ** 2 + dy ** 2 + dz ** 2)
+		dev = (dx ** 2 + dy ** 2 + dz ** 2) ** 0.5
 
 		if dev > 0.15:
 			return True  # vector has changed by 1 degree
 		return False  # vector is less than 1 degree different from previous value
+
+	def testing_update_mag(self, new_mag):
+		testing = self.sensors.test
+		if testing:
+			grav = self.sensors.read_accel()
+			self.sensors = Sensor(testing, new_mag, grav)
+
+	def testing_update_accel(self, new_accel):
+		testing = self.sensors.test
+		if testing:
+			self.sensors = Sensor(testing, self.mag, new_accel)
 
 	def get_grav(self):
 		return self.gravity
