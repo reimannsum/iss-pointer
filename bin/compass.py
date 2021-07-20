@@ -121,11 +121,13 @@ class Compass:
 		self.gravity_rotation_vector = (0, 0, 0)
 		self.gravity_rotation_angle = 0
 
-		self.update()
-		print("spherical representation: ")
-		print(cart2sph(self.mag_Up[0], self.mag_Up[1], self.mag_Up[2]))
-		# get the azimuth angle of north to know what to subtract to correct for
-		# not pointing the device north before running.
+
+		# # There is no reason to call this in the initialization.
+		# self.update()
+		# print("spherical representation: ")
+		# print(cart2sph(self.mag_Up[0], self.mag_Up[1], self.mag_Up[2]))
+		# # get the azimuth angle of north to know what to subtract to correct for
+		# # not pointing the device north before running.
 
 		pass
 
@@ -220,36 +222,6 @@ class Compass:
 
 
 if __name__ == "__main__":
-	print("XYZ to ThetaPhiR:")
-	print("Cardinal Directions:\nEast:")
-	print(cart2sph(3, 0, 0))
-	print("North:")
-	print(cart2sph(0, 0, 3))
-	print("West:")
-	print(cart2sph(-3, 0, 0))
-	print("South:")
-	print(cart2sph(0, 0, -3))
-	print("Up:")
-	print(cart2sph(0, 3, 0))
-	print("Down:")
-	print(cart2sph(0, -3, 0))
-	print("ThetaPhiR to XYZ")
-	print("\nNorth:")
-	print(sph2cart(0, 0, 3))
-	print("East:")
-	print(sph2cart(270, 0, 3))
-	print("South:")
-	print(sph2cart(180, 0, 3))
-	print("West:")
-	print(sph2cart(90, 0, 3))
-	print("Up:")
-	print(sph2cart(0, 90, 3))
-	print("Down:")
-	print(sph2cart(0, -90, 3))
-	print("\n\n 1% deviation at standard strength:")
-	print(sph2cart(1, 0, 10))
-	print(sph2cart(0, 1, 10))
-
 	compass = Compass()
 	print(compass)
 
