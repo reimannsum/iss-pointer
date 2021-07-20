@@ -77,8 +77,8 @@ def sph2cart(az, elev, r):
 	:param r: length of vector
 	:return: carteasian coordinates
 	"""
-	x = round(r * cos(radians(0 + elev)) * cos(radians(az + 90)), 8)
-	z = round(r * cos(radians(0 + elev)) * sin(radians(az + 90)), 8)
+	x = round(r * cos(radians(0 + elev)) * sin(radians(az)), 8)
+	z = round(r * cos(radians(0 + elev)) * cos(radians(az)), 8)
 	y = round(r * sin(radians(0 + elev)), 8)
 	return x, y, z
 
