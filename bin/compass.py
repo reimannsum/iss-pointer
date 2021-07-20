@@ -45,7 +45,7 @@ class Sensor:
 		if not self.test:
 			x, y, z = self.sensor.acceleration
 		else:
-			x,y,z = self.accel_reading
+			x, y, z = self.accel_reading
 		return x, z, y
 
 
@@ -119,6 +119,7 @@ class Compass:
 		self.spherical_correction = cart2sph(0, 1, 0)
 		self.gravity_rotation_vector = (0, 0, 0)
 		self.gravity_rotation_angle = 0
+		self.mag_Up[0], self.mag_Up[1], self.mag_Up[2] = (0.0, 0.0, 0.0)
 
 		self.update()
 		print("spherical representation: ")
