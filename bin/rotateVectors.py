@@ -1,5 +1,4 @@
 import math
-
 import numpy as np
 import numpy.linalg as linalg
 
@@ -48,6 +47,8 @@ def rotateAbout(a, b, theta):
 
 
 def find_rotation(old_v, new_v):
+    if old_v == new_v :
+        return [0, 0, 1], 0
     old_v = np.array(old_v)
     new_v = np.array(new_v)
     rotation_vector = np.cross(old_v, new_v) / np.linalg.norm(np.cross(old_v, new_v))

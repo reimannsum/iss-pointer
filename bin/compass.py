@@ -4,49 +4,15 @@
 Name: RPi Compass controller
 Project: ISS Pointer
 
+The goal of this class is to take sensor data and be able to act on it to
+
 Dev: Reimannsum
 Last Modified: Sept 04, 2019
 """
 from math import cos, sin, degrees, atan2, radians
-
-import adafruit_blinka.board as board
-import adafruit_lsm9ds1
-import busio
 from geomag.geomag import GeoMag as geomag
-
+from bin.sensor import Sensor
 from bin.rotateVectors import rotateAbout, find_rotation
-
-
-class Sensor:
-	"""
-	This class creates an object to read the chip
-
-	"""
-
-	def __init__(self, test=False, givenM=(0, 0, 0), givenA=(0,0,0)):
-		if not test:
-			self.test = False
-			# pulling the drivers for the chip
-			i2c = busio.I2C(board.SCL, board.SDA)
-			self.sensor = adafruit_lsm9ds1.LSM9DS1_I2C(i2c)
-		else:
-			self.test = True
-			self.mag_reading = givenM
-			self.accel_reading = givenA
-
-	def read_mag(self):
-		if not self.test:  # I believe this is a hack to avoid dealing with the orientation of the chip on the device
-			x, z, y = self.sensor.magnetic
-		else:
-			x, y, z = self.mag_reading
-		return x, y, z
-
-	def read_accel(self):
-		if not self.test:  # I believe this is a hack to avoid dealing with the orientation of the chip on the device
-			x, z, y = self.sensor.acceleration
-		else:
-			x, y, z = self.accel_reading
-		return x, y, z
 
 
 def cart2sph(x, y, z):
@@ -54,7 +20,7 @@ def cart2sph(x, y, z):
 	:param x: east is positive
 	:param y: up is positive
 	:param z: north is positive
-	:return: degrees
+	:return: Spherical coordinates
 	"""
 	XsqPlusZsq = x ** 2 + z ** 2
 	r = (XsqPlusZsq + y ** 2) ** 0.5  # r
@@ -75,7 +41,7 @@ def sph2cart(az, elev, r):
 	:param az: Rotation east from north
 	:param elev: rotation up from horizontal
 	:param r: length of vector
-	:return: carteasian coordinates
+	:return: Cartesian coordinates
 	"""
 	x = round(r * cos(radians(0 + elev)) * sin(radians(az)), 8)
 	z = round(r * cos(radians(0 + elev)) * cos(radians(az)), 8)
@@ -94,6 +60,9 @@ class Compass:
 	This will handle interpreting all sensor readings
 	this holds the last data read and interpreted
 	gravity: is the XYZ vector for gravity
+
+	Main function is the orient up function as it will give correction to anything given to it.
+
 	x: east is positive
 	y: north is positive
 	z: up is positive
@@ -114,13 +83,12 @@ class Compass:
 
 		# Initialize variables
 		self.N_correction = 0  # how many degrees assumed north is from true north
-		self.gravity = (0.0, 0.0, 0.0)
+		self.gravity = (0.0, -0.1, 0.0)
 		self.mag = (0.0, 0.0, 0.0)
 		self.mag_Up = (0.0, 0.0, 0.0)
 		self.spherical_correction = cart2sph(0, 1, 0)  # unit vector of up
 		self.gravity_rotation_vector = (0, 0, 0)
-		self.gravity_rotation_angle = 0
-
+		self.gravity_rot_angle_radians = 0
 
 		# # There is no reason to call this in the initialization.
 		# self.update()
@@ -139,7 +107,7 @@ class Compass:
 			self.spherical_correction[0], self.spherical_correction[1])
 		string += "Fix Vect: ({0:4.3f},{1:4.3f},{2:4.3f})  Fix Angle: {3:4.3f}\n".format(
 			self.gravity_rotation_vector[0], self.gravity_rotation_vector[1], self.gravity_rotation_vector[2],
-			degrees(self.gravity_rotation_angle))
+			degrees(self.gravity_rot_angle_radians))
 		string += "Mag field: \n({0:4.3f},{1:4.3f},{2:4.3f})\n".format(self.mag_Up[0], self.mag_Up[1], self.mag_Up[2])
 		return string
 
@@ -151,7 +119,7 @@ class Compass:
 			self.spherical_correction[0], self.spherical_correction[1])
 		string += "Fix Vect: ({0:4.3f},{1:4.3f},{2:4.3f})  Fix Angle: {3:4.3f}\n".format(
 			self.gravity_rotation_vector[0], self.gravity_rotation_vector[1], self.gravity_rotation_vector[2],
-			degrees(self.gravity_rotation_angle))
+			degrees(self.gravity_rot_angle_radians))
 		string += "Mag field: \n({0:4.3f},{1:4.3f},{2:4.3f})\n".format(self.mag_Up[0], self.mag_Up[1], self.mag_Up[2])
 		thing = cart2sph(self.mag_Up[0], self.mag_Up[1], self.mag_Up[2])
 		string += "Mag fix: Az: {0:4.3f}  Elev: {1:4.3f}".format(thing[0], thing[1])
@@ -167,13 +135,13 @@ class Compass:
 			# to rotate about that vector in order to align the gravity
 			# vector from the sensor with that of gravity, allowing
 			# orientation to true gravity
-			self.gravity_rotation_vector, self.gravity_rotation_angle = find_rotation((0, 0, -9.8), self.gravity)
+			self.gravity_rotation_vector, self.gravity_rot_angle_radians = find_rotation((0, 0, -9.8), self.gravity)
 		else:
 			self.gravity = old_grav
 		# set gravity back to not compound changes
 
 		self.mag = self.sensors.read_mag()
-		self.mag_Up = self.orient_up(self.mag)
+		self.mag_Up = list(self.orient_up(self.mag))
 		# get the angle of the magnetic field relative to the orientation of gravity
 		self.N_correction = cart2sph(self.mag_Up[0], self.mag_Up[1], self.mag_Up[2])[0]
 		self.N_correction += self.declination
@@ -218,7 +186,7 @@ class Compass:
 
 	def orient_up(self, vector):
 		# Reorientates Vector to a gravity up orientation
-		return rotateAbout(vector, self.gravity_rotation_vector, self.gravity_rotation_angle)
+		return rotateAbout(vector, self.gravity_rotation_vector, self.gravity_rot_angle_radians)
 
 
 if __name__ == "__main__":
