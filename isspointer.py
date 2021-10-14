@@ -107,7 +107,7 @@ class Isspointer:
 		of the Stepper motor controller
 		"""
 		if num == 1:
-			return Stepper([18, 17, 27, 22], steps, gearing) # 12, 11, 13, 15
+			return Stepper([12, 11, 13, 15], steps, gearing) # 18, 17, 27, 22
 		else:
 			return Stepper([5, 6, 12, 13], steps, gearing) # 29, 31, 32, 33
 
