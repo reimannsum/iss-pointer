@@ -177,6 +177,6 @@ then rotates the motor.
 
 if __name__ == '__main__':
     GPIO.setmode(GPIO.BOARD)
-    stepper = Stepper([12, 11, 13, 15])
+    stepper = Stepper([18, 17, 27, 22])
     while True:
         stepper.rotate(int(Avalon.gets("Angle")), Avalon.ask("CW?", True))
