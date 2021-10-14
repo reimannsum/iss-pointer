@@ -19,7 +19,7 @@ from time import sleep
 import RPi.GPIO as GPIO
 from avalon_framework import Avalon
 
-from .exceptions import InvalidDirectionError
+from exceptions import InvalidDirectionError
 
 VERSION = "1.0.1"
 
