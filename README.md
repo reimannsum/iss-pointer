@@ -6,6 +6,7 @@
 - The arm will be turned by a motor [like this](https://www.ebay.com/sch/i.html?&_nkw=Micro+15MM+DC+5V+2-Phase+4-Wire+Metal+Gear+Stepper+Motor&_sacat=0&LH_TitleDesc=0&_osacat=0&_odkw=39MM+Thin+2-phase+4-wire+Stepper+Motor)
 
 The grav sensor/ compass is [one of these](https://www.digikey.com/en/products/detail/adafruit-industries-llc/3387/6623863?s=N4IgjCBcoLQBxVAYygMwIYBsDOBTANCAPZQDa4ArAEwIC6AvvYVWSAMxtwDsIDQA)
+
 The screen is [like this](https://www.ebay.com/sch/i.html?&_nkw=IIC+0.91%22+0.96%22+inch+128x32+Blue+OLED+LCD)
 
 ## 1.0.1 (August 27, 2019)
